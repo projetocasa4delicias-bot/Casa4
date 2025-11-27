@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Gerenciamento - Paleta Chocolate</title>
+  <!-- Google Fonts: Poppins com fallback para sans-serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* INSTRUÇÕES RÁPIDAS (comentários no topo do HTML):
+     * COMO TESTAR: Abra este arquivo index.html no navegador (Chrome/Firefox recomendado). Funciona offline via localStorage.
+     * ONDE MODIFICAR PALETA: Procure por :root no CSS abaixo e altere as variáveis --choco-* e --accent.
+     * MENSAGENS EM PT-BR: Procure por strings em JS (ex.: mensagens de toast, labels de formulário) e edite diretamente.
+     * EXPORTAR/IMPORTAR: Vá para a seção Export/Import no menu lateral. Exporta JSON completo; importe colando ou carregando arquivo.
+     * LIMITAÇÕES: Imagens em Base64 no localStorage (limite ~5MB total; evite imagens grandes). Sem backend, dados por usuário local.
+     * MANUTENÇÃO: JS modularizado em funções; adicione features editando seções como dataManager.js (embutido).
+     * DEPENDÊNCIAS: Nenhuma externa obrigatória. Google Fonts opcional (comente o link se quiser offline puro).
+     */
+
+    /* VARIÁVEIS CSS - PALETA CHOCOLATE (modifique aqui) */
+    :root {
+      --choco-900: #401909; /* Muito escuro: fundos principais */
+      --choco-800: #4F2815; /* Escuro: textos e bordas */
+      --choco-700: #48200F; /* Destaque: headers */
+      --choco-600: #612E18; /* Botões/hover: interações */
+      --accent: #D6A57A; /* Bege: CTAs, cards, contrastes */
+      --bg-alt: #2f1a13; /* Fundo alternativo para temas escuros */
+      --white: #ffffff; /* Branco para textos em fundos escuros */
+      --shadow: 0 4px 12px rgba(64, 25, 9, 0.3); /* Sombra suave */
+      --border-radius: 12px; /* Bordas arredondadas */
+      --transition: all 0.3s ease; /* Transições suaves */
+    }
+
+    /* Tema claro/escuro - toggle via JS alterando :root ou classe body */
+    body.light-theme {
+      --bg-main: #fff7f0; /* Fundo claro opcional */
+      --text-primary: var(--choco-800);
+    }
+    body.dark-theme {
+      --bg-main: var(--choco-900);
+      --text-primary: var(--white);
+    }
+    body { /* Padrão: tema escuro */
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-main, var(--choco-900));
+      color: var(--text-primary, var(--white));
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+      transition: var(--transition);
+    }
+
+    /* HEADER / TOPBAR */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: var(--choco-800);
+      border-bottom: 1px solid var(--accent);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .search-global {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 2rem;
+    }
+    .search-global input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--accent);
+      border-radius: var(--border-radius);
+      background: var(--white);
+      color: var(--choco-800);
+    }
+    .profile-btn {
+      background: var(--accent);
+      color: var(--choco-900);
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .profile-btn:hover {
+      background: var(--choco-600);
+      color: var(--white);
+    }
+
+    /* MENU LATERAL (desktop) / HAMBURGER (mobile) */
+    nav {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      width: 250px;
+      background: var(--choco-700);
+      transform: translateX(-100%);
+      transition: var(--transition);
+      z-index: 99;
+    }
+    nav.open {
+      transform: translateX(0);
+    }
+    .hamburger {
+      display: none; /* Mobile only */
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--accent);
+      cursor: pointer;
+    }
+    nav ul {
+      list-style: none;
+      padding: 2rem 0;
+      margin: 0;
+    }
+    nav li {
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--choco-900);
+    }
+    nav a {
+      color: var(--white);
+      text-decoration: none;
+      display: block;
+      transition: var(--transition);
+    }
+    nav a:hover, nav a.active {
+      color: var(--accent);
+      padding-left: 0.5rem;
+    }
+    @media (min-width: 768px) {
+      nav {
+        transform: translateX(0);
+        position: relative;
+        width: 250px;
+      }
+      .hamburger { display: none; }
+      main { margin-left: 250px; }
+    }
+    @media (max-width: 767px) {
+      .hamburger { display: block; }
+      header { padding: 1rem; }
+      .search-global { margin: 0 1rem; max-width: 200px; }
+      main { margin-left: 0; padding: 1rem; }
+    }
+
+    /* MAIN CONTENT */
+    main {
+      padding: 2rem;
+      min-height: 100vh;
+      transition: var(--transition);
+    }
+    section {
+      display: none;
+    }
+    section.active {
+      display: block;
+    }
+
+    /* CARDS E LAYOUTS RESPONSIVOS */
+    .card {
+      background: var(--accent);
+      color: var(--choco-800);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+      transition: var(--transition);
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(64, 25, 9, 0.4);
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    .inventory-list, .recipes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    @media (max-width: 767px) {
+      .inventory-list, .recipes-grid { grid-template-columns: 1fr; }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--white);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--choco-900);
+    }
+    th {
+      background: var(--choco-600);
+      color: var(--white);
+    }
+    .img-thumbnail {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* BOTÕES */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+    .btn-primary {
+      background: var(--choco-600);
+      color: var(--white);
+    }
+    .btn-primary:hover {
+      background: var(--choco-700);
+    }
+    .btn-secondary {
+      background: var(--accent);
+      color: var(--choco-800);
+    }
+    .btn-secondary:hover {
+      background: var(--choco-600);
+      color: var(--white);
+    }
+    .btn-danger {
+      background: #a52a2a; /* Vermelho escuro para remover */
+      color: var(--white);
+    }
+    .btn-floating {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--choco-900);
+      font-size: 1.5rem;
+      box-shadow: var(--shadow);
+      z-index: 50;
+    }
+    @media (max-width: 767px) {
+      .btn-floating { bottom: 1rem; right: 1rem; }
+    }
+
+    /* MODAIS */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: var(--white);
+      color: var(--choco-800);
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--choco-900);
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .form-group textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    .ingredient-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: center;
+    }
+    .ingredient-row input {
+      flex: 1;
+    }
+    .img-preview {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+    .close-modal {
+      float: right;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--choco-600);
+    }
+
+    /* CALENDÁRIO */
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--choco-800);
+      border-radius: var(--border-radius);
+    }
+    .calendar-header {
+      grid-column: 1 / -1;
+      background: var(--choco-700);
+      color: var(--white);
+      padding: 1rem;
+      text-align: center;
+      font-weight: 600;
+    }
+    .calendar-day {
+      background: var(--white);
+      color: var(--choco-800);
+      padding: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+    .calendar-day:hover, .calendar-day.has-sales {
+      background: var(--accent);
+    }
+    .calendar-day-header {
+      grid-column: 1 / -1;
+      background: var(--choco-600);
+      color: var(--white);
+      padding: 0.5rem;
+      text-align: center;
+    }
+
+    /* TOASTS (feedback) */
+    .toast {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      background: var(--choco-600);
+      color: var(--white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      z-index: 300;
+      transform: translateX(100%);
+      transition: var(--transition);
+    }
+    .toast.active {
+      transform: translateX(0);
+    }
+    .toast.error {
+      background: #a52a2a;
+    }
+
+    /* CONFIGURAÇÕES */
+    .settings-form {
+      max-width: 400px;
+    }
+
+    /* FILTROS E BUSCA */
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filters input, .filters select {
+      padding: 0.5rem;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+    }
+
+    /* ACESSIBILIDADE: Contraste e foco */
+    button:focus, input:focus, select:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    [aria-label] {
+      /* Labels para screen readers já no HTML/JS */
+    }
+
+    /* UTILITÁRIOS */
+    .hidden { display: none; }
+    .grid { display: grid; }
+    .flex { display: flex; }
+    .gap-1 { gap: 1rem; }
+  </style>
+</head>
+<body class="dark-theme"> <!-- Padrão escuro; JS pode trocar para light-theme -->
+
+  <!-- HEADER -->
+  <header>
+    <button class="hamburger" aria-label="Abrir menu" onclick="toggleMenu()">☰</button>
+    <div class="logo">🍫 Gerenciador Chocolate</div>
+    <div class="search-global">
+      <input type="text" id="searchGlobal" placeholder="Buscar itens ou receitas..." oninput="globalSearch()">
+    </div>
+    <button class="profile-btn" aria-label="Configurações de perfil" onclick="showSection('config')">
+      ⚙️
+    </button>
+  </header>
+
+  <!-- MENU LATERAL -->
+  <nav id="sidebar" role="navigation" aria-label="Menu principal">
+    <ul>
+      <li><a href="#dashboard" onclick="showSection('dashboard')" class="active">Dashboard</a></li>
+      <li><a href="#estoque" onclick="showSection('estoque')">Estoque</a></li>
+      <li><a href="#receitas" onclick="showSection('receitas')">Receitas</a></li>
+      <li><a href="#calendario" onclick="showSection('calendario')">Calendário de Vendas</a></li>
+      <li><a href="#export" onclick="showSection('export')">Export/Import</a></li>
+      <li><a href="#config" onclick="showSection('config')">Configurações</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT (SPA via hash routing) -->
+  <main>
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="active">
+      <h1>Dashboard</h1>
+      <div class="dashboard-grid">
+        <div class="card">
+          <h2>Total de Itens</h2>
+          <p id="totalItens">0</p>
+        </div>
+        <div class="card">
+          <h2>Itens Baixos no Estoque</h2>
+          <p id="itensBaixos">0</p>
+        </div>
+        <div class="card">
+          <h2>Receitas Cadastradas</h2>
+          <p id="totalReceitas">0</p>
+        </div>
+        <div class="card">
+          <h2>Vendas no Mês</h2>
+          <p id="vendasMes">R$ 0,00</p>
+        </div>
+      </div>
+      <!-- Gráfico simples: tabela resumo (sem libs) -->
+      <div class="card">
+        <h2>Resumo de Vendas (Mês Atual)</h2>
+        <table id="resumoVendas">
+          <thead><tr><th>Data</th><th>Total</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ESTOQUE -->
+    <section id="estoque">
+      <h1>Estoque</h1>
+      <div class="filters">
+        <input type="text" id="filterEstoque" placeholder="Filtrar por nome..." oninput="filterEstoque()">
+        <select id="filterCategoria" onchange="filterEstoque()">
+          <option value="">Todas Categorias</option>
+        </select>
+      </div>
+      <div id="listaEstoque" class="inventory-list"></div>
+      <button class="btn-floating btn-primary" aria-label="Adicionar item" onclick="openModal('addItem')">+</button>
+    </section>
+
+    <!-- RECEITAS -->
+    <section id="receitas">
+      <h1>Receitas</h1>
+      <div class="filters">
+        <input type="text" id="filterReceitas" placeholder="Filtrar por título..." oninput="filterReceitas()">
+      </div>
+      <div id="gridReceitas" class="recipes-grid"></div>
+      <button class="btn-floating btn-primary" aria-label="Adicionar receita" onclick="openModal('addReceita')">+</button>
+    </section>
+
+    <!-- CALENDÁRIO -->
+    <section

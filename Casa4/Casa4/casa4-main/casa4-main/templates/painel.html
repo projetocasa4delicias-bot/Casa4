@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <link rel="icon" href="/static/img/casa4comp.png" type="casa4comp.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Casa4 Artesanais</title>
+  <style>
+    body, html { margin:0; padding:0; height:100%; font-family: Arial, sans-serif; user-select:none; overflow-x: hidden; }
+    body { background: url("/static/img/chocolate-background.jpg") no-repeat center center fixed; background-size: cover; }
+    .carousel { display: flex; height: 100%; width: 200%; transition: transform 0.6s ease-in-out; }
+    .page { width: 100vw; flex-shrink:0; display:flex; justify-content:center; align-items: flex-start; padding: 5vh 20px; box-sizing: border-box; }
+    .window { background-color: rgba(139, 62, 31, 0.9); width: 100%; max-width: 1000px; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.3); display:flex; flex-direction:column; align-items:center; padding:20px; position:relative; color:white; }
+    .logo { width: 100%; max-width: 450px; margin-bottom:10px; -webkit-user-drag:none; user-select:none; pointer-events:none; }
+    h1 { margin:5px 0 15px 0; font-size:36px; text-transform:uppercase; font-weight:bold; user-select:none; }
+    .buttons { display:flex; gap:8px; margin-bottom:15px; }
+    .buttons button { background:white; color:#8B3E1F; border:none; padding:6px 12px; font-size:13px; border-radius:5px; cursor:pointer; font-weight:bold; transition:0.3s; user-select:none; }
+    .buttons button:hover { background:#FFD580; }
+    .grid { display: flex; flex-wrap: wrap; justify-content: center; gap:25px; margin-top:10px; width: 100%; }
+    .card { background:white; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.2); user-select:none; cursor:pointer; display:flex; flex-direction:column; overflow:hidden; transition: transform 0.2s ease; width: 220px; height: 220px; }
+    .card:hover { transform: scale(1.03); }
+    .card img { width:100%; height:80%; object-fit:cover; }
+    .card-title { padding: 10px; text-align: center; color: #333; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Estilos para a Lista de Estoque */
+    .list-view {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .list-item {
+      display: flex;
+      align-items: center;
+      background: white;
+      color: #333;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .list-item:hover {
+      background-color: #fdf8f5;
+      transform: translateY(-2px);
+    }
+    .list-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 15px; }
+    .list-item-info { flex-grow: 1; }
+    .list-item-info h3 { margin: 0; font-size: 16px; font-weight: bold; }
+    .list-item-info p { margin: 2px 0 0 0; font-size: 14px; color: #666; }
+    .list-item-price { font-size: 16px; font-weight: bold; color: #8B3E1F; }
+    /* Fim dos estilos da lista */
+
+    .dot { width:12px; height:12px; background: rgba(255,255,255,0.6); border-radius:50%; cursor:pointer; transition:background 0.3s; }
+    .dot.active { background:white; }
+    .arrow {
+      position: fixed;
+      top: 0;
+      height: 100%;
+      width: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem; color: white; cursor: pointer; user-select: none;
+      background: transparent;
+      transition: opacity 0.3s ease, background-color 0.3s ease; z-index: 10;
+    }
+    .arrow:hover { background-color: rgba(0,0,0,0.4); }
+    .arrow.hidden { opacity:0; pointer-events:none; }
+    .arrow.left { left:0; } .arrow.right { right:0; }
+
+    /* Overlay e modais */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      z-index: 900;
+      transition: opacity 0.25s ease;
+      opacity: 0;
+    }
+
+    .modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 10px;
+      width: 350px;
+      max-width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      display: none;
+      flex-direction: column;
+      z-index: 999;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      opacity: 0;
+    }
+
+    .product-modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      color: black;
+      border-radius: 10px; max-width: 90%;
+      width: 350px;
+      height: 500px;
+      overflow-y: auto; /* Adiciona rolagem vertical se o conteúdo for maior */
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      display: none;
+      flex-direction: column;
+      z-index: 999;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      opacity: 0;
+      padding: 20px;
+    }
+
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #8B3E1F;
+    }
+
+    .close-modal {
+      background: crimson;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .modal-form { display:flex; flex-direction:column; gap:10px; }
+    .modal-form label { font-weight:bold; font-size:14px; }
+    .modal-form input, .modal-form textarea { padding:6px; border-radius:5px; border:1px solid #ccc; resize:none; }
+    .save-btn { background:#8B3E1F; color:white; border:none; padding:8px; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:10px; }
+    .save-btn:hover { background:#FFD580; color:#8B3E1F; }
+
+    .product-modal img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    .product-modal ul {
+      padding-left: 20px;
+      margin-top: 5px;
+      text-align: left;
+    }
+
+ /* Estilos para Controles (Botão e Pesquisa) */
+    .controls-container {
+      display: flex;
+      justify-content: space-between;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 15px;
+      gap: 15px;
+    }
+    .search-container {
+      position: relative;
+    }
+
+    /* 🔹 Media Queries para responsividade em dispositivos móveis 🔹 */
+    @media (max-width: 768px) {
+      .window {
+        padding: 15px;
+      }
+      .logo {
+        max-width: 250px;
+      }
+      h1 {
+        font-size: 28px; /* Fonte do título menor */
+      }
+      .grid {
+        gap: 15px;
+      }
+  </style>
+</head>
+<body>
+  <div class="carousel" id="carousel">
+    
+    <!-- Página RECEITAS -->
+    <div class="page">
+      <div class="window">
+        <img src="/static/img/logo-casa4.png" alt="Logo Casa4" class="logo">
+        <h1>Receitas</h1>
+        <div class="buttons">
+          <button id="openAddRecipe">Adicionar Receita</button>
+        </div>
+        <div class="grid" id="recipeGrid">
+          {% for receita in receitas %}
+          <div class="card" id="recipe-card-{{ receita.id }}" onclick="openRecipeModal('{{ receita.id }}')">
+            {% if receita.imagem_url %}
+              <img src="{{ receita.imagem_url }}" alt="{{ receita.nome }}">
+            {% else %}
+              <img src="https://via.placeholder.com/150" alt="Sem imagem">
+            {% endif %}
+            <div class="card-title">{{ receita.nome }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Página ESTOQUE -->
+    <div class="page">
+      <div class="window">
+        <img src="/static/img/logo-casa4.png" alt="Logo Casa4" class="logo">
+        <h1>Estoque</h1>
+        <div class="controls-container">
+          <div class="buttons">
+            <button id="openAddItem">Adicionar Item</button>
+          </div>
+          <div class="search-container">
+            <input type="text" id="searchStockInput" placeholder="Pesquisar por nome...">
+          </div>
+        </div>
+        <div class="list-view" id="productGrid">
+          {% for produto in produtos %}
+          <div class="list-item" id="product-card-{{ produto.id }}" onclick="openProductModal('{{ produto.id }}')">
+            {% if produto.imagem_url %}
+              <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}">
+            {% else %}
+              <img src="https://via.placeholder.com/150" alt="Sem imagem">
+            {% endif %}
+            <div class="list-item-info">
+              <h3>{{ produto.nome }}</h3>
+              <p>Quantidade: {{ produto.quantidade }}</p>
+            </div>
+            <div class="list-item-price">
+              R$ {{ "%.2f"|format(produto.preco|float) }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Setas -->
+  <div class="arrow left" id="arrowLeft">&#10094;</div>
+  <div class="arrow right" id="arrowRight">&#10095;</div>
+
+  <!-- Indicadores -->
+  <div class="indicators" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Modais de Adicionar ITEM -->
+  <div class="modal" id="modalItem">
+    <div class="modal-header">
+      <h2>Adicionar Item</h2>
+      <button class="close-modal" id="closeModalItem">X</button>
+    </div>
+    <form action="/adicionar_produto" method="POST" enctype="multipart/form-data" class="modal-form">
+      <label>Foto:</label>
+      <input type="file" name="imagem" accept="image/*" required>
+      <label>Nome:</label>
+      <input type="text" name="nome" required>
+      <label>Preço:</label>
+      <input type="number" name="preco" step="0.01" required>
+      <label>Quantidade:</label>
+      <input type="number" name="quantidade" required>
+      <button type="submit" class="save-btn">Adicionar</button>
+    </form>
+  </div>
+
+  <!-- Modal Adicionar RECEITA -->
+  <div class="modal" id="modalRecipe">
+    <div class="modal-header">
+      <h2>Adicionar Receita</h2>
+      <button class="close-modal" id="closeModalRecipe">X</button>
+    </div>
+    <form action="/adicionar_receita" method="POST" enctype="multipart/form-data" class="modal-form">
+      <label>Foto:</label>
+      <input type="file" name="imagem" accept="image/*" required>
+      <label>Nome:</label>
+      <input type="text" name="nome" required>
+      <label>Descrição:</label>
+      <textarea name="descricao" rows="3" required></textarea>
+      <label>Ingredientes:</label>
+      <textarea name="ingredientes" rows="3" required></textarea>
+      <button type="submit" class="save-btn">Adicionar</button>
+    </form>
+  </div>
+
+  <!-- Modais individuais de produtos, receitas e ingredientes -->
+  {% for receita in receitas %}
+  <div class="product-modal" id="recipeModal-{{ receita.id }}">
+    <div class="modal-header">
+      <h2>{{ receita.nome }}</h2>
+      <button class="close-modal" onclick="closeRecipeModal('{{ receita.id }}')">X</button>
+    </div>
+    {% if receita.imagem_url %}
+      <img src="{{ receita.imagem_url }}" alt="{{ receita.nome }}">
+    {% else %}
+      <img src="https://via.placeholder.com/150" alt="Sem imagem">
+    {% endif %}
+
+    <!-- Conteúdo de Visualização -->
+    <div class="recipe-view-content">
+      <p><strong>Descrição:</strong> {{ receita.descricao }}</p>
+      <p><strong>Ingredientes:</strong></p>
+      <ul>
+        {% for ingrediente_item in receita.ingredientes_lista %}
+          <li>{{ ingrediente_item }}</li>
+        {% else %}
+          <li>Nenhum ingrediente listado.</li>
+        {% endfor %}
+      </ul>
+      <button class="save-btn" onclick="showEditRecipeView('{{ receita.id }}')">Editar Receita</button>
+      <form action="/remover_receita/{{ receita.id }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir esta receita?')" style="margin-top: 10px;">
+        <button type="submit" class="save-btn" style="background:crimson; color:white;">Excluir</button>
+      </form>
+    </div>
+
+    <!-- Conteúdo de Edição (inicialmente oculto) -->
+    <div class="recipe-edit-content" style="display: none;">
+      <form action="/editar_receita/{{ receita.id }}" method="POST" enctype="multipart/form-data" class="modal-form edit-recipe-form">
+        <label>Nome:</label>
+        <input type="text" name="nome" value="{{ receita.nome }}" required>
+        <label>Descrição:</label>
+        <textarea name="descricao" rows="3" required>{{ receita.descricao }}</textarea>
+        <label>Ingredientes:</label>
+        <textarea name="ingredientes" rows="3" required>{{ receita.ingredientes }}</textarea>
+        <label>Nova imagem:</label>
+        <input type="file" name="imagem">
+        <button type="submit" class="save-btn">Salvar</button>
+        <button type="button" class="save-btn" style="background: #777; margin-top: 5px;" onclick="showRecipeDetailsView('{{ receita.id }}')">Cancelar</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% for produto in produtos %}
+  <div class="product-modal" id="productModal-{{ produto.id }}">
+    <div class="modal-header">
+      <h2>{{ produto.nome }}</h2>
+      <button class="close-modal" onclick="closeProductModal('{{ produto.id }}')">X</button>
+    </div>
+    {% if produto.imagem_url %}
+      <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}">
+    {% else %}
+      <img src="https://via.placeholder.com/150" alt="Sem imagem">
+    {% endif %}
+    <p><strong>Quantidade:</strong> {{ produto.quantidade }}</p>
+    <p><strong>Preço:</strong> R$ {{ "%.2f"|format(produto.preco) }}</p>
+
+    <form action="/editar_produto/{{ produto.id }}" method="POST" enctype="multipart/form-data" class="modal-form edit-product-form">
+      <label>Nome:</label>
+      <input type="text" name="nome" value="{{ produto.nome }}" required>
+      <label>Preço:</label>
+      <input type="number" step="0.01" name="preco" value="{{ produto.preco }}" required>
+      <label>Quantidade:</label>
+      <input type="number" name="quantidade" value="{{ produto.quantidade }}" required>
+      <label>Foto:</label>
+      <input type="file" name="imagem">
+      <button type="submit" class="save-btn">Editar</button>
+    </form>
+
+    <form action="/remover_produto/{{ produto.id }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este item do estoque?')">
+      <button type="submit" class="save-btn" style="background:crimson; color:white;">Excluir</button>
+    </form>
+  </div>
+  {% endfor %}
+
+  <script>
+    const carousel = document.getElementById("carousel");
+    const dots = document.querySelectorAll(".dot");
+    const leftArrow = document.getElementById("arrowLeft");
+    const rightArrow = document.getElementById("arrowRight");
+    let currentIndex = 0;
+
+    // === Carrossel ===
+    function showPage(index) {
+      if (index < 0) index = 0;
+      if (index > 1) index = 1;
+      carousel.style.transform = `translateX(-${index * 100}vw)`;
+      dots.forEach((d, i) => d.classList.toggle("active", i === index));
+      currentIndex = index;
+
+      // Controla a visibilidade das setas
+      leftArrow.classList.toggle("hidden", currentIndex === 0);
+      rightArrow.classList.toggle("hidden", currentIndex === 1);
+    }
+
+    dots.forEach((dot, index) => dot.addEventListener("click", () => showPage(index)));
+    leftArrow.addEventListener("click", () => showPage(currentIndex - 1));
+    rightArrow.addEventListener("click", () => showPage(currentIndex + 1));
+
+    showPage(0); // Garante que o estado inicial das setas esteja correto
+
+    // === Overlay ===
+    const overlay = document.getElementById("overlay");
+    function fadeInOverlay() {
+      overlay.style.display = "block";
+      setTimeout(() => overlay.style.opacity = "1", 10);
+    }
+    function fadeOutOverlay() {
+      overlay.style.opacity = "0";
+      setTimeout(() => overlay.style.display = "none", 250);
+    }
+
+    // === Funções genéricas para abrir/fechar com animação ===
+    function openModal(modal) {
+      modal.style.display = "flex";
+      modal.style.opacity = "0";
+      modal.style.transform = "translate(-50%, -48%)";
+      fadeInOverlay();
+      setTimeout(() => {
+        modal.style.opacity = "1";
+        modal.style.transform = "translate(-50%, -50%)";
+      }, 10);
+    }
+
+    function closeModal(modal) {
+      modal.style.opacity = "0";
+      modal.style.transform = "translate(-50%, -48%)";
+      fadeOutOverlay();
+      setTimeout(() => modal.style.display = "none", 250);
+    }
+
+    // === Modais de Adicionar ===
+    const modalItem = document.getElementById("modalItem");
+    const modalRecipe = document.getElementById("modalRecipe");
+
+    const openAddItem = document.getElementById("openAddItem");
+    const closeModalItem = document.getElementById("closeModalItem");
+    const openAddRecipe = document.getElementById("openAddRecipe");
+    const closeModalRecipe = document.getElementById("closeModalRecipe");
+
+    openAddItem.addEventListener("click", () => openModal(modalItem));
+    closeModalItem.addEventListener("click", () => closeModal(modalItem));
+    openAddRecipe.addEventListener("click", () => openModal(modalRecipe));
+    closeModalRecipe.addEventListener("click", () => closeModal(modalRecipe));
+
+    // === Modais individuais ===
+    function openProductModal(id) { openModal(document.getElementById("productModal-" + id)); }
+    function closeProductModal(id) { closeModal(document.getElementById("productModal-" + id)); }
+    function openRecipeModal(id) { openModal(document.getElementById("recipeModal-" + id)); }
+    function closeRecipeModal(id) { closeModal(document.getElementById("recipeModal-" + id)); }
+
+    // === Troca de visualização nos modais de receita ===
+    function showEditRecipeView(id) {
+      const modal = document.getElementById(`recipeModal-${id}`);
+      modal.querySelector('.recipe-view-content').style.display = 'none';
+      modal.querySelector('.recipe-edit-content').style.display = 'block';
+    }
+
+    function showRecipeDetailsView(id) {
+      const modal = document.getElementById(`recipeModal-${id}`);
+      modal.querySelector('.recipe-view-content').style.display = 'block';
+      modal.querySelector('.recipe-edit-content').style.display = 'none';
+    }
+
+    // === Filtro de pesquisa para o estoque ===
+    const searchStockInput = document.getElementById('searchStockInput');
+    searchStockInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const productItems = document.querySelectorAll('#productGrid .list-item');
+
+      productItems.forEach(item => {
+        const productName = item.querySelector('.list-item-info h3').textContent.toLowerCase();
+        if (productName.includes(searchTerm)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    // === Fechar ao clicar fora ===
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        document.querySelectorAll(".modal, .product-modal").forEach(m => m.style.display = "none");
+        fadeOutOverlay();
+      }
+    });
+
+    // === AJAX para Edição ===
+    async function handleEditSubmit(event, itemType) {
+        event.preventDefault();
+        const form = event.target;
+        const url = form.action;
+        const formData = new FormData(form);
+        const modal = form.closest('.product-modal');
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Falha ao salvar. Status: ' + response.status);
+            }
+
+            const updatedItem = await response.json();
+
+            // Atualizar o card na grade
+            const card = document.getElementById(`${itemType}-card-${updatedItem.id}`);
+            if (card) {
+                if (itemType === 'product') {
+                    card.querySelector('.list-item-info h3').textContent = updatedItem.nome;
+                    card.querySelector('.list-item-info p').textContent = `Quantidade: ${updatedItem.quantidade}`;
+                    card.querySelector('.list-item-price').textContent = `R$ ${parseFloat(updatedItem.preco).toFixed(2)}`;
+                } else {
+                    card.querySelector('.card-title').textContent = updatedItem.nome;
+                }
+                if (updatedItem.imagem_url) {
+                    // Adiciona um timestamp para forçar o navegador a recarregar a imagem
+                    card.querySelector('img').src = updatedItem.imagem_url + '?t=' + new Date().getTime();
+                }
+            }
+
+            // Atualizar o conteúdo do modal
+            if (modal) {
+                modal.querySelector('h2').textContent = updatedItem.nome;
+                if (updatedItem.imagem_url) {
+                    modal.querySelector('img').src = updatedItem.imagem_url + '?t=' + new Date().getTime();
+                }
+
+                if (itemType === 'product') {
+                    modal.querySelector('p:nth-of-type(1)').innerHTML = `<strong>Quantidade:</strong> ${updatedItem.quantidade}`;
+                    modal.querySelector('p:nth-of-type(2)').innerHTML = `<strong>Preço:</strong> R$ ${parseFloat(updatedItem.preco).toFixed(2)}`;
+                } else if (itemType === 'recipe') {
+                    modal.querySelector('p:nth-of-type(1)').innerHTML = `<strong>Descrição:</strong> ${updatedItem.descricao}`;
+                    const ingredientsList = modal.querySelector('ul');
+                    ingredientsList.innerHTML = ''; // Limpa a lista antiga
+                    if (updatedItem.ingredientes) {
+                        updatedItem.ingredientes.split('\n').forEach(ing => {
+                            if(ing.trim()){
+                                const li = document.createElement('li');
+                                li.textContent = ing.trim();
+                                ingredientsList.appendChild(li);
+                            }
+                        });
+                    } else {
+                         const li = document.createElement('li');
+                         li.textContent = 'Nenhum ingrediente listado.';
+                         ingredientsList.appendChild(li);
+                    }
+                    // Reseta a visualização para o modo de detalhes
+                    modal.querySelector('.recipe-view-content').style.display = 'block';
+                    modal.querySelector('.recipe-edit-content').style.display = 'none';
+                }
+            }
+
+            closeModal(modal);
+            // Opcional: mostrar uma notificação de sucesso
+
+        } catch (error) {
+            console.error('Erro ao editar:', error);
+            alert('Ocorreu um erro ao salvar as alterações.');
+        }
+    }
+
+    document.querySelectorAll('.edit-product-form').forEach(form => {
+        form.addEventListener('submit', (e) => handleEditSubmit(e, 'product'));
+    });
+
+    document.querySelectorAll('.edit-recipe-form').forEach(form => {
+        form.addEventListener('submit', (e) => handleEditSubmit(e, 'recipe'));
+    });
+
+    // === Bloquear Zoom no Desktop ===
+    document.addEventListener('wheel', function(event) {
+      if (event.ctrlKey) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    document.addEventListener('keydown', function(event) {
+      if (event.ctrlKey && (event.key === '+' || event.key === '-' || event.key === '=' || event.key === '0')) {
+        event.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

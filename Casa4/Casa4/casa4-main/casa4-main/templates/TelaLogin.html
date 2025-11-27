@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="icon" href="/static/img/casa4comp.png" type="casa4comp.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login Casa 4</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: url('{{ url_for("static", filename="img/chocolate-background.jpg") }}') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      padding: 20px;
+    }
+    img.logo {
+      max-width: 700px;
+      width: 80%; /* 🔹 Garante que o logo se ajuste à largura da tela */
+      margin-bottom: 0px;
+    }
+    .inputs-container { display: flex; gap: 10px; width: 80%; max-width: 700px; margin-bottom: 20px; }
+    input[type="text"], input[type="password"] {
+      flex: 1;
+      padding: 15px 15px 15px 35px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      color: #4a2c17;
+      background-color: #d8b79f;
+      position: relative;
+    }
+    input[type="text"] {
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%234a2c17" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 4a2 2 0 012-2h16a2 2 0 012 2v16a2 2 0 01-2 2H4a2 2 0 01-2-2V4zm18 0H4v16h16V4z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: 10px center;
+      background-size: 18px 18px;
+    }
+    input[type="password"] {
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%234a2c17" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17a2 2 0 100-4 2 2 0 000 4zm5-8h-1V6a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: 0px center;
+      background-size: 18px 18px;
+    }
+    ::placeholder { color: #7a5a45; }
+    .buttons-container {
+      display: flex;
+      gap: 10px;
+      width: 80%;
+      max-width: 700px;
+      margin-top: 20px;
+    }
+    button {
+      flex: 1;
+      border: none;
+      background-position: 10px center;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 15px 0;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #entrar {
+      background-color: #e1832d;
+      background-position: 10px center;
+      color: #fff;
+    }
+    #entrar:hover { background-color: #b96816; }
+    #cadastrar {
+      background-color: #e1832d;
+      color: #fff;
+    }
+    #cadastrar:hover { background-color: #2f1a0f; }
+    button#esqueci {
+      background: none;
+      border: none;
+      color: #f5d1af;
+      text-decoration: underline;
+      font-size: 16px;
+      margin-top: 0px;
+      cursor: pointer;
+      font-family: Arial, sans-serif;
+    }
+    button#esqueci:hover { color: #fff; }
+    .container { display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .flash-message {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f44336;
+      color: white;
+      border-radius: 5px;
+      width: 80%;
+      max-width: 700px;
+      text-align: center;
+    }
+
+    /* 🔹 Media Queries para responsividade em dispositivos móveis 🔹 */
+    @media (max-width: 768px) {
+      .inputs-container, .buttons-container {
+        flex-direction: column; /* Itens em coluna */
+        width: 90%; /* Aumenta a largura para aproveitar a tela */
+      }
+      input[type="text"], input[type="password"], button {
+        width: 100%; /* Ocupa toda a largura do contêiner pai */
+      }
+      img.logo {
+        max-width: 300px; /* Reduz o tamanho máximo do logo */
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <img src="{{ url_for('static', filename='img/logo-casa4.png') }}" alt="Logo Casa 4" class="logo" />
+  
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash-message">
+        {% for message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="container">
+    <!-- 🔹 Formulário ajustado para centralizar seu conteúdo -->
+    <form
+      action="{{ url_for('pagina_login') }}"
+      method="POST"
+      style="display: flex; flex-direction: column; align-items: center; width: 100%;"
+    >
+      <div class="inputs-container">
+        <input type="text" name="email" placeholder="Usuário" required />
+        <input type="password" name="senha" placeholder="Senha" required />
+      </div>
+
+      <div class="buttons-container">
+        <button id="entrar" type="submit">ENTRAR</button>
+        <button id="cadastrar" type="button" onclick="window.location.href='{{ url_for('pagina_cadastro') }}'">CADASTRAR</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

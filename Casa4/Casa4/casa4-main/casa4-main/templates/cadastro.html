@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="icon" href="/static/img/casa4comp.png" type="casa4comp.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cadastro Casa 4</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: url('{{ url_for("static", filename="img/chocolate-background.jpg") }}') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      padding: 20px;
+    }
+
+    img.logo {
+      max-width: 700px;
+      margin-bottom: 0px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .inputs-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 80%;
+      max-width: 700px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], input[type="email"], input[type="password"] {
+      padding: 15px 15px 15px 15px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      color: #4a2c17;
+      background-color: #d8b79f;
+    }
+
+    ::placeholder {
+      color: #7a5a45;
+    }
+
+    .buttons-container {
+      display: flex;
+      gap: 10px;
+      width: 80%;
+      max-width: 700px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    button {
+      flex: 1;
+      padding: 15px 0;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #cadastrar-btn {
+      background-color: #e1832d;
+      color: #fff;
+    }
+
+    #cadastrar-btn:hover {
+      background-color: #b96816;
+    }
+
+    #voltar-btn {
+      background-color: #d8b79f;
+      color: #4a2c17;
+    }
+
+    #voltar-btn:hover {
+      background-color: #c0a182;
+    }
+
+    .flash-message {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f44336;
+      color: white;
+      border-radius: 5px;
+      width: 80%;
+      max-width: 700px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <img src="{{ url_for('static', filename='img/logo-casa4.png') }}" alt="Logo Casa 4" class="logo" />
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash-message">
+        {% for message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="container">
+    <form action="{{ url_for('pagina_cadastro') }}" method="POST">
+      <div class="inputs-container">
+        <input type="text" name="nome" placeholder="Nome completo" required />
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="password" name="senha" placeholder="Senha" required />
+        <input type="password" name="confirma_senha" placeholder="Confirmar senha" required />
+      </div>
+
+      <div class="buttons-container">
+        <button type="submit" id="cadastrar-btn">Cadastrar</button>
+        <button type="button" id="voltar-btn" onclick="window.location.href='{{ url_for('pagina_login') }}'">Voltar</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
